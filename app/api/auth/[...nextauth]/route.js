@@ -1,24 +1,50 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 export const authOptions = {
   providers: [
     CredentialsProvider({
-      name: "Admin Login",
+      name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
+        email: { label: "Email", type: "email", placeholder: "admin@imcb.edu.pk" },
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        // TODO: In Phase 2, connect this to Prisma to verify hashed passwords
-        // For now, this is a secure placeholder structure for NextAuth
-        if (credentials.email === "admin@imcb.edu.pk" && credentials.password === "password") {
-          return { id: "1", name: "Admin", email: "admin@imcb.edu.pk", role: "admin" };
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Invalid credentials");
         }
-        return null;
+
+        const user = await prisma.user.findUnique({
+          where: {
+            email: credentials.email
+          }
+        });
+
+        if (!user || !user.password) {
+          throw new Error("Invalid credentials");
+        }
+
+        const isCorrectPassword = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
+
+        if (!isCorrectPassword) {
+          throw new Error("Invalid credentials");
+        }
+
+        return user;
       }
     })
   ],
+  session: {
+    strategy: "jwt"
+  },
+  pages: {
+    signIn: "/login",
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -27,15 +53,15 @@ export const authOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
+      if (token) {
         session.user.role = token.role;
       }
       return session;
     }
   },
-  session: { strategy: "jwt" },
-  pages: { signIn: "/admin/login" }, // Will create this page when we build the CMS UI
+  secret: process.env.NEXTAUTH_SECRET || "imcb-secret-key-super-secure"
 };
 
 const handler = NextAuth(authOptions);
+
 export { handler as GET, handler as POST };
