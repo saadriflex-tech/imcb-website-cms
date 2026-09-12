@@ -3,12 +3,15 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, Calendar, Download } from "lucide-react";
 
-export default function NoticeBoard({ initialNotices }) {
+export default function NoticeBoard({ initialNotices, availableTypes = ["Academics", "Admissions", "General", "Merit List"] }) {
   const [filter, setFilter] = useState("All");
 
   const filteredNotices = filter === "All" 
     ? initialNotices 
-    : initialNotices.filter(n => n.type.replace('_', ' ') === filter.toLowerCase());
+    : initialNotices.filter(n => n.type.replace('_', ' ').toLowerCase() === filter.toLowerCase());
+
+  // Make sure "All" is always first
+  const filterTabs = ["All", ...availableTypes.filter(t => t !== "All")];
 
   return (
     <section style={{ padding: '80px 20px', background: '#fff' }}>
@@ -16,7 +19,7 @@ export default function NoticeBoard({ initialNotices }) {
         
         {/* Filters */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'center', marginBottom: '60px' }}>
-          {["All", "Academics", "Admissions", "General", "Merit List"].map((cat) => (
+          {filterTabs.map((cat) => (
             <button 
               key={cat} 
               onClick={() => setFilter(cat)}
@@ -30,10 +33,11 @@ export default function NoticeBoard({ initialNotices }) {
                 fontWeight: 'bold', 
                 cursor: 'pointer', 
                 transition: 'all 0.3s ease',
-                boxShadow: filter === cat ? '0 10px 20px rgba(65, 68, 127, 0.2)' : 'none'
+                boxShadow: filter === cat ? '0 10px 20px rgba(65, 68, 127, 0.2)' : 'none',
+                textTransform: 'capitalize'
               }}
             >
-              {cat}
+              {cat.replace('_', ' ')}
             </button>
           ))}
         </div>

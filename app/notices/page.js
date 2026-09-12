@@ -6,9 +6,18 @@ export const dynamic = "force-dynamic";
 
 export default async function NoticesPage() {
   const notices = await prisma.notice.findMany({
-    where: { isPublished: true },
+    where: { 
+      isPublished: true,
+      OR: [
+        { publishDate: null },
+        { publishDate: { lte: new Date() } }
+      ]
+    },
     orderBy: { createdAt: 'desc' }
   });
+
+  // Extract unique types from the active notices to build dynamic filter buttons
+  const availableTypes = Array.from(new Set(notices.map(n => n.type)));
 
   return (
     <div style={{ backgroundColor: 'var(--bg)', minHeight: '100vh' }}>
@@ -19,7 +28,7 @@ export default async function NoticesPage() {
         subtitle="Stay updated with the latest news, exam schedules, and official notices from the college administration."
       />
 
-      <NoticeBoard initialNotices={notices} />
+      <NoticeBoard initialNotices={notices} availableTypes={availableTypes} />
     </div>
   );
 }

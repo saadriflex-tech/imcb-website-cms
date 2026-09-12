@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { title, type, content, isPublished } = body;
+    const { title, type, content, isPublished, publishDate } = body;
 
     if (!title || !content) {
       return NextResponse.json({ error: "Title and content are required." }, { status: 400 });
@@ -16,6 +16,7 @@ export async function POST(request) {
         type,
         content,
         isPublished,
+        publishDate: publishDate ? new Date(publishDate) : null,
       },
     });
 
