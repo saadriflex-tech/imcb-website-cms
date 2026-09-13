@@ -1,20 +1,29 @@
-import { prisma } from "@/lib/prisma";
+import { getPayload } from 'payload';
+import configPromise from '@/payload.config';
 import Hero from "@/components/Hero";
 import NoticeBoard from "@/components/NoticeBoard";
 
 export const dynamic = "force-dynamic";
 
 export default async function NoticesPage() {
-  const notices = await prisma.notice.findMany({
-    where: { 
-      isPublished: true,
-      OR: [
-        { publishDate: null },
-        { publishDate: { lte: new Date() } }
+  const payload = await getPayload({ config: configPromise });
+  
+  const now = new Date().toISOString();
+  
+  const result = await payload.find({
+    collection: 'notices',
+    where: {
+      isPublished: { equals: true },
+      or: [
+        { publishDate: { exists: false } },
+        { publishDate: { less_than_equal: now } }
       ]
     },
-    orderBy: { createdAt: 'desc' }
+    sort: '-createdAt',
+    limit: 100
   });
+  
+  const notices = result.docs;
 
   // Extract unique types from the active notices to build dynamic filter buttons
   const availableTypes = Array.from(new Set(notices.map(n => n.type)));

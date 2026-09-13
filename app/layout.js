@@ -20,18 +20,11 @@ export const metadata = {
   },
 };
 
-import ClientLayoutWrapper from "@/components/ClientLayoutWrapper";
-import Providers from "@/components/Providers";
-
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${inter.variable} ${poppins.variable}`}>
-        <Providers>
-          <ClientLayoutWrapper>
-            {children}
-          </ClientLayoutWrapper>
-        </Providers>
+        {children}
       </body>
     </html>
   );
